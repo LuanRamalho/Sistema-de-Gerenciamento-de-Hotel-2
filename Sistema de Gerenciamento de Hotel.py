@@ -24,7 +24,7 @@ class HotelManagementSystem:
                              411: "Manutenção", 412: "Livre", 413: "Manutenção", 414: "Livre", 415: "Manutenção", 415: "Livre", 416: "Manutenção", 417: "Livre",
                              418: "Manutenção", 419: "Livre", 420: "Manutenção", 421: "Livre", 422: "Livre", 423: "Livre" , 424: "Livre", 425: "Livre"
                       }
-        self.reservations = []
+        self.reservations = {}
         self.services = []
         self.financial_records = []  # Registro financeiro
         self.promotions = []  # Promoções de marketing
@@ -192,17 +192,34 @@ class HotelManagementSystem:
             name = guest_name.get()
             room = room_number.get()
             if name and room:
-                self.rooms[int(room)] = "Reservado"
-                self.reservations.append({"name": name, "room": int(room)})
-                self.financial_records.append({"type": "Reserva", "amount": 200, "description": f"Reserva do quarto {room}"})
-                messagebox.showinfo("Sucesso", "Reserva realizada com sucesso!")
-                guest_name.delete(0, tk.END)
-                room_number.set("")
+                room = int(room)  # Converte para número
+                # Verifica se o quarto já tem reservas
+                if room not in self.reservations:
+                    self.reservations[room] = []
+                # Verifica se o limite de hóspedes foi atingido
+                if len(self.reservations[room]) < 4:
+                    self.reservations[room].append(name)
+                    self.rooms[room] = "Reservado"
+                    self.financial_records.append({"type": "Reserva", "amount": 200, "description": f"Reserva do quarto {room}"})
+                    messagebox.showinfo("Sucesso", f"Reserva para {name} no quarto {room} adicionada com sucesso!")
+                    guest_name.delete(0, tk.END)
+                    room_number.set("")
+                else:
+                    messagebox.showerror("Erro", f"O quarto {room} já está com o limite de 4 hóspedes.")
             else:
                 messagebox.showerror("Erro", "Preencha todos os campos.")
 
         add_btn = tk.Button(form_frame, text="Adicionar Reserva", bg="#0066cc", fg="white", command=add_reservation)
         add_btn.grid(row=2, columnspan=2, pady=10)
+
+        tk.Label(self.main_frame, text="Reservas Atuais:", font=("Helvetica", 14), bg="#f0f0f0").pack(pady=10)
+        reservations_frame = tk.Frame(self.main_frame, bg="#f0f0f0")
+        reservations_frame.pack(pady=10)
+
+        for room, guests in self.reservations.items():
+            tk.Label(reservations_frame, text=f"Quarto {room}: {', '.join(guests)}", bg="#f0f0f0").pack(anchor="w")
+
+
 
     def manage_housekeeping(self):
         """Gestão da Governança."""
